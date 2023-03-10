@@ -7,8 +7,9 @@ const db = require('./db');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 const DanhMuc = require('./routes/DanhMuc')
-const DongHo = require('./routes/DongHo')
-
+const DongHo = require('./routes/DongHo');
+const tinhRouter = require('./routes/Tinh');
+const dcRouter = require('./routes/DiaChi');
 const fileUpload = require('express-fileupload');
 const cors = require('cors')
 var app = express();
@@ -27,7 +28,8 @@ app.use('/DanhMuc', DanhMuc);
 app.use('/DongHo', DongHo);
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-
+app.use('/Tinh', tinhRouter);
+app.use('/DC', dcRouter);
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));

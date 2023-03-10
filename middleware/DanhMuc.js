@@ -1,6 +1,7 @@
 const { ObjectId } = require('mongodb/lib/bson');
 const db = require('../db');
 const DanhMuc= require('../model/DanhMucModel');
+var _ = require('lodash');
 exports.GetDanhMuc = async (req, res, next) => {
     console.log("GetDanhMuc");
     try {
@@ -18,11 +19,11 @@ exports.GetDanhMuc = async (req, res, next) => {
 exports.AddDanhMuc = async (req, res, next) => {
     console.log("AddDanhMuc", req.body);
     const Body = req.body;
-    const TenDanhMuc = Body.TenDanhMuc || '';
-    const DaXoa = Body.DaXoa ===  '' ? DaXoa = false : Body.DaXoa;
+    const TenDanhMuc =Body.TenDanhMuc;
+    const DaXoa = _.isNil(Body.DaXoa ) === true ? DaXoa = false : Body.DaXoa;
     
     try {
-        if(TenDanhMuc !== ''){
+        if(_.isNil(TenDanhMuc) !== true){
             const dataDanhMuc = await db.connect();
       
         const check = await dataDanhMuc.db().collection('DanhMuc').findOne({TenDanhMuc: TenDanhMuc});
@@ -34,16 +35,18 @@ exports.AddDanhMuc = async (req, res, next) => {
             // console.log(newDanhMuc);
        
             // await  newDanhMuc.save;
-            
-             res.send(all);
+            res.json({result: 'success', errorCode: 0});
+             
         }
       
        else{
-        res.json({mess: "Tên đã tồn tại"})
+      
+        res.json({result: 'success', errorCode: 1001, message: 'Tên đã tồn tại'});
        }
         }
         else{
-            res.json({mess: "Tên danh mục không được để trống"})   
+            res.json({result: 'success', errorCode: 1001, message: 'Tên danh mục không được để trống'});
+           
         }
        
        
@@ -93,8 +96,8 @@ exports.UpdateDanhMuc = async (req, res, next) => {
         const check = await dataDanhMuc.db().collection('DanhMuc').findOne({_id: new ObjectId(id)});
         console.log("check", check);
         if(check !== null){
-            const TenDanhMuc = Body.TenDanhMuc === '' ? check.TenDanhMuc : Body.TenDanhMuc;
-            const DaXoa = Body.DaXoa === '' ? check.DaXoa : Body.DaXoa;
+            const TenDanhMuc = _.isNil(Body.TenDanhMuc) === true ? check.TenDanhMuc : Body.TenDanhMuc;
+            const DaXoa = _.isNil(Body.DaXoa) === true ? check.DaXoa : Body.DaXoa;
          
             const all = await dataDanhMuc.db().collection('DanhMuc').findOneAndUpdate(
                 {_id : new ObjectId(id)},
@@ -102,11 +105,13 @@ exports.UpdateDanhMuc = async (req, res, next) => {
                 { returnDocument: "after" }
             );
            console.log(all);
-             res.send(all);
+           res.json({result: 'success', errorCode: 0});
+            
         }
       
        else{
-        res.json({mess: "Danh mục không tồn tại"})
+        res.json({result: 'success', errorCode: 1001, message: 'Danh mục không tồn tại'});
+       
        }
        
        
@@ -140,15 +145,18 @@ exports.DeleteByIDDanhMuc = async (req, res, next) => {
                     {MaDanhMuc : new ObjectId(id)}
                     
                 );
-                res.json({mess: "Xóa thành công"})
+                res.json({result: 'success', errorCode: 0});
+                
             }
             else{
-                res.json({mess: "Có lỗi"})
+                res.json({result: 'success', errorCode: 1001, message: 'Có lỗi'});
+              
             }
             
         }
         else{
-            res.json({mess: "Danh mục không tồn tại"})
+            res.json({result: 'success', errorCode: 1001, message: 'Danh mục không tồn tại'});
+           
         }
       
        

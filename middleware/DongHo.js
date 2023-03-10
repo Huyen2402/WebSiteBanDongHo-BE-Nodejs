@@ -2,7 +2,7 @@ const { ObjectId } = require('mongodb/lib/bson');
 const db = require('../db');
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
-
+var _ = require('lodash');
 cloudinary.config({
     cloud_name: "dkxgovttj",
     api_key: "482755262992517",
@@ -57,51 +57,6 @@ const createImageTag = (publicId) => {
     return imageTag;
 };
 
-exports.uploadImage = async (req, res, next) => {
-    const urlRes = []
-    try {
-        console.log(req.files);
-        if (!req.files) {
-            res.send({
-                status: false,
-                message: 'No file uploaded'
-            });
-        } else {
-             //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
-             let HinhAnh = req.files.HinhAnh;
-             let HinhAnh1 = req.files.HinhAnh1;
-             const imagePath = HinhAnh.name;
-             const imagePath1 = HinhAnh1.name;
-             avatar.mv('./uploads/' + HinhAnh.name);
-             avatar.mv('./uploads/' + HinhAnh1.name);
-             // Upload the image
-             const publicId = await uploadImage('./uploads/' + imagePath);
-             const publicId1 = await uploadImage('./uploads/' + imagePath1);
-             fs.unlinkSync('./uploads/' + imagePath);
-             fs.unlinkSync('./uploads/' + imagePath1);
-             // Get the colors in the image
-             const url = await getAssetInfo(publicId);
-             const url1 = await getAssetInfo(publicId1);
-             // Create an image tag, using two of the colors in a transformation
-             const imageTag = await createImageTag(publicId);
-             const imageTag1 = await createImageTag(publicId1);
-             res.send({
-                status: true,
-                message: 'File is uploaded',
-                data: {
-                    
-                 
-                    HinhAnh: url,
-                    HinhAnh1: url1,
-                }
-            });
-        }
-    } catch (err) {
-        console.log(err);
-        res.status(500).send(err);
-    }
-
-};
 
 exports.GetAllDongHo = async (req, res, next) => {
     console.log("GetAllDongHo");
@@ -135,21 +90,71 @@ exports.GetDongHoByIDDanhMuc = async (req, res, next) => {
     }
 }
 
+exports.uploadImage = async (req, res, next) => {
+    const urlRes = []
+    try {
+        console.log(req.files);
+        if (!req.files) {
+            res.send({
+                result: 'fail', 
+                status: false,
+                errorCode: 1001,
+                message: 'No file uploaded'
+            });
+        } else {
+             //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
+             let HinhAnh = req.files.HinhAnh;
+             let HinhAnh1 = req.files.HinhAnh1;
+             const imagePath = HinhAnh.name;
+             const imagePath1 = HinhAnh1.name;
+             HinhAnh.mv('./uploads/' + HinhAnh.name);
+             HinhAnh1.mv('./uploads/' + HinhAnh1.name);
+             // Upload the image
+             const publicId = await uploadImage('./uploads/' + imagePath);
+             const publicId1 = await uploadImage('./uploads/' + imagePath1);
+             fs.unlinkSync('./uploads/' + imagePath);
+             fs.unlinkSync('./uploads/' + imagePath1);
+             // Get the colors in the image
+             const url = await getAssetInfo(publicId);
+             const url1 = await getAssetInfo(publicId1);
+             // Create an image tag, using two of the colors in a transformation
+             const imageTag = await createImageTag(publicId);
+             const imageTag1 = await createImageTag(publicId1);
+             res.send({
+                status: true,
+                message: 'Upload thành công',
+                result: 'success', 
+                errorCode: 0,
+                data: {
+                    
+                 
+                    HinhAnh: url,
+                    HinhAnh1: url1,
+                }
+            });
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500).send(err);
+    }
+
+};
+
 
 exports.AddDongHoByIDDanhMuc = async (req, res, next) => {
     console.log("AddDongHoByIDDanhMuc", req.body);
     const Body = req.body;
-    const MaDanhMuc = Body.MaDanhMuc || '';
-    const TenDongHo = Body.TenDongHo || '';
-    const Mota = Body.Mota || '';
-    // const HinhAnh = req.files.HinhAnh || null;
-    // const HinhAnh1 = req.files.HinhAnh1 || null;
-    const GiaBan = Body.GiaBan || '';
-    const KhuyenMai = Body.KhuyenMai || '';
-
+    const MaDanhMuc = Body.MaDanhMuc ;
+    const TenDongHo = Body.TenDongHo;
+    const Mota = Body.Mota ;
+    const HinhAnh = Body.HinhAnh ;
+    const HinhAnh1 = Body.HinhAnh1 ;
+    const GiaBan = Body.GiaBan ;
+    const KhuyenMai = Body.KhuyenMai ;
+    const SL = Body.SL;
     try {
        
-            if (MaDanhMuc === '' || TenDongHo === ''|| Mota === '' || GiaBan === '' || KhuyenMai === '') {
+            if (_.isNil(MaDanhMuc) === true || _.isNil(TenDongHo) === true|| _.isNil(Mota) === true || _.isNil(GiaBan) === true || _.isNil(KhuyenMai) === true || _.isNil(SL)===true) {
                 res.send({
                     status: false,
                     message: 'Có lỗi xảy ra, thiếu thông tin'
@@ -166,16 +171,19 @@ exports.AddDongHoByIDDanhMuc = async (req, res, next) => {
                         TenDongHo: TenDongHo,
                         MaDanhMuc: MaDanhMuc,
                         Mota: Mota,
-                        HinhAnh: url,
-                        HinhAnh1: url1,
+                        HinhAnh: HinhAnh,
+                        HinhAnh1: HinhAnh1,
                         GiaBan: GiaBan,
-                        KhuyenMai: KhuyenMai
+                        KhuyenMai: KhuyenMai,
+                        SL: SL
                     });
                    
-                    res.send(newDongHo);
+                   
+                    res.json({result: 'success', errorCode: 0});
                 }
                 else {
-                    res.json({ mess: "Tên đã tồn tại" })
+                    res.json({result: 'success', errorCode: 1001, message: 'Tên đã tồn tại'});
+                   
                 }
             
         }
@@ -183,6 +191,51 @@ exports.AddDongHoByIDDanhMuc = async (req, res, next) => {
 
 
 
+    } catch (error) {
+        console.log(error);
+        res.status(500).send(error);
+    }
+}
+
+exports.UpdateDongHoByIDDanhMuc = async (req, res, next) => {
+    console.log("UpdateDongHoByIDDanhMuc", req.body);
+    const Body = req.body;
+    const id = Body._id;
+    console.log("id",id);
+
+    try {
+        const dataDanhMuc = await db.connect();
+
+        const check = await dataDanhMuc.db().collection('DongHo').findOne({ _id: new ObjectId(id) });
+        if(check === null){
+            res.json({result: 'success', errorCode: 1001, message: 'Đồng hồ không tồn tại'});
+        }
+        else{
+            const MaDanhMuc = _.isNil(Body.MaDanhMuc) === true ? check.MaDanhMuc : Body.MaDanhMuc;
+            const TenDongHo = _.isNil(Body.TenDongHo) === true ? check.TenDongHo : Body.TenDongHo;
+            const Mota = _.isNil(Body.Mota) === true ? check.Mota : Body.Mota;
+            const HinhAnh = _.isNil(Body.HinhAnh) === true ? check.HinhAnh : Body.HinhAnh;
+            const HinhAnh1 = _.isNil(Body.HinhAnh1) === true ? check.HinhAnh1 : Body.HinhAnh1;
+            const GiaBan = _.isNil(Body.GiaBan) === true ? check.GiaBan : Body.GiaBan;
+            const KhuyenMai = _.isNil(Body.KhuyenMai) === true ? check.KhuyenMai : Body.KhuyenMai;
+            const SL = _.isNil(Body.SL) === true ? check.SL : Body.SL;
+            const updateDongHo = await dataDanhMuc.db().collection('DongHo').findOneAndUpdate(
+                {_id : new ObjectId(id)},
+                {$set : { TenDongHo: TenDongHo,
+                    MaDanhMuc: MaDanhMuc,
+                    Mota: Mota,
+                    HinhAnh: HinhAnh,
+                    HinhAnh1: HinhAnh1,
+                    GiaBan: GiaBan,
+                    KhuyenMai: KhuyenMai,
+                    SL: SL
+                }},
+                { returnDocument: "after" }
+            );
+            res.json({result: 'success', errorCode: 0});
+        }
+        
+   
     } catch (error) {
         console.log(error);
         res.status(500).send(error);
